@@ -1,6 +1,5 @@
 import "dotenv/config";
 import fs from "fs";
-import readline from "readline";
 import { google } from "googleapis";
 import process, { stdin, stdout } from "process";
 import path from "path";
