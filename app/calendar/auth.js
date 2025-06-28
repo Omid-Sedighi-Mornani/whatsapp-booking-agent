@@ -24,14 +24,9 @@ const waitForCode = () => {
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 
-const CREDENTIALS_PATH = path.join(process.cwd(), process.env.CREDENTIALS_PATH);
 const TOKEN_PATH = path.join(process.cwd(), process.env.TOKEN_PATH);
-const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
-const auth = await authorize(credentials);
 
-console.log(auth);
-
-async function authorize(credentials) {
+export async function authorize(credentials) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   const OAuth2Client = new google.auth.OAuth2(
     client_id,
