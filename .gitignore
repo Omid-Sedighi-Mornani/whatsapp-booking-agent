@@ -17,6 +17,10 @@ pids
 # dotenv environment files
 .env
 
+# Calendar API credential files
+credentials.json
+token.json
+
 # WhatsApp session files
 session.json
 .session/
