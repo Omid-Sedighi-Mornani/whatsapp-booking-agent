@@ -1,11 +1,22 @@
-import OpenAI from "openai";
 import "dotenv/config";
+import readline from "readline";
+import process from "process";
+import { createEvent } from "./agent/agent.js";
+import { addEvent } from "./calendar/booking.js";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const waitForInput = (msg) => {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    rl.question(msg, (input) => {
+      resolve(input);
+      rl.close();
+    });
+  });
+};
 
-const response = await client.responses.create({
-  model: "gpt-4.1-nano-2025-04-14",
-  input: "Das ist eine kleine Test-Nachricht!",
-});
-
-console.log(response.output_text);
+const userInput = await waitForInput("Terminbuchung eingeben\n");
+const event = await createEvent(userInput);
+addEvent(event);
