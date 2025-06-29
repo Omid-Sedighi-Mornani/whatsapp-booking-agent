@@ -1,15 +1,15 @@
 import pkg from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
-import { createEvent } from "../agent/agent.js";
-import { addEvent } from "../calendar/booking.js";
-
+import process from "process";
+import { handleMessage } from "./messagehandler.js";
 const { Client, LocalAuth } = pkg;
+
+const CHROMIUM_PATH = process.env.CHROMIUM_PATH;
 
 export const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath:
-      "/Users/omidsedighi-mornani/.cache/puppeteer/chrome/mac_arm-138.0.7204.49/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+    executablePath: CHROMIUM_PATH,
   },
 });
 
@@ -31,8 +31,6 @@ client.on("qr", (qr) => {
 });
 
 client.on("message", async (message) => {
-  const event = await createEvent(message.body);
-  console.log(event);
-  await addEvent(event);
-  client.sendMessage(message.from, "Deine Stunde wurde geplant!");
+  const replyMessage = await handleMessage(message.from, message.body);
+  client.sendMessage(message.from, replyMessage);
 });
