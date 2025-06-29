@@ -43,6 +43,7 @@ Beispiel-JSON:
   },
   "colorId": "6"
 }
+ Alle Felder müssen immer ausgefüllt sein. Wenn keine Endzeit angegeben ist, gehe davon aus, dass der Termin 45 Minuten dauert und berechne die Endzeit automatisch.
 `;
 
 export default instructions;

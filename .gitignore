@@ -36,3 +36,7 @@ coverage/
 # Optional: Ignore build artifacts
 dist/
 build/
+
+# webjs packages
+.wwebjs_auth/
+.wwebjs_cache/
