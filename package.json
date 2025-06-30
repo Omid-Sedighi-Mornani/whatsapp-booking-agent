@@ -13,9 +13,11 @@
   "dependencies": {
     "@google-cloud/local-auth": "^2.1.0",
     "@openai/agents": "^0.0.10",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.0.0",
     "express": "^5.1.0",
     "googleapis": "^105.0.0",
+    "luxon": "^3.6.1",
     "open": "^10.1.2",
     "openai": "^5.8.2",
     "puppeteer": "^24.11.1",

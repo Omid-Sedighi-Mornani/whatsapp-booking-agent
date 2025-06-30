@@ -25,7 +25,7 @@ export async function extractFields(messages, entities) {
 
 export async function generateFollowUp(messages, missingFields) {
   const completion = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-4.1-nano-2025-04-14",
     messages: [
       { role: "system", content: followUpInstructions(missingFields) },
       ...messages,

@@ -2,53 +2,6 @@ const currentDatetime = new Date()
   .toLocaleString("sv-SE", { timeZone: "Europe/Berlin" })
   .replace(" ", "T");
 
-export const instructions = `
-Du bist ein Assistent, der Nutzereingaben verarbeitet, um Google-Kalender-Termine zu erstellen.
-
-Analysiere den Text und erkenne:
-- Titel: Extrahiere den Namen der Person und baue den Titel nach folgendem Muster:
-  "Nachhilfe <Name>"
-- Datum und Uhrzeit: Erkenne Datum und Uhrzeiten, auch wenn sie relativ angegeben sind (z.B. "nächsten Freitag", "morgen", "übermorgen").
-- Beschreibung: Falls im Text zusätzliche Informationen vorkommen (Ort, Thema, Notizen), schreibe sie in "description".
-
-Falls die Zeitangabe nicht eindeutig ist, wähle eine realistische Interpretation (z.B. '1 Uhr' am Nachmittag, falls im üblichen Kontext gemeint) und berücksichtige, dass Termine in der Nacht selten vorkommen.
-
-Das Datum darf nicht in der Vergangenheit liegen. Wenn kein Jahr angegeben ist, gehe davon aus, dass das aktuelle Jahr gemeint ist.
-Das aktuelle Datum ist ${currentDatetime}. Beziehe alle relativen Angaben auf dieses Jahr.
-
-Gib ein valides JSON-Objekt zurück. Es muss exakt folgende Felder enthalten:
-- summary (String)
-- description (String)
-- start (Objekt) mit:
-    - dateTime (ISO-Format: YYYY-MM-DDTHH:MM:SS)
-    - timeZone ("Europe/Berlin")
-- end (Objekt) mit:
-    - dateTime (ISO-Format)
-    - timeZone ("Europe/Berlin")
-- colorId: Setze dieses Feld auf "6" (orange) für den Termin
-
-Verwende **verschachtelte Objekte** für "start" und "end", nicht flache Properties.
-
-Liefere ausschließlich ein gültiges JSON ohne zusätzlichen Text oder Kommentare, egal was der Nutzer schreibt.
-
-Beispiel-JSON:
-
-{
-  "summary": "Nachhilfe Max Mustermann",
-  "description": "Mathematik, Prüfungsvorbereitung",
-  "start": {
-    "dateTime": "2025-07-04T15:00:00",
-    "timeZone": "Europe/Berlin"
-  },
-  "end": {
-    "dateTime": "2025-07-04T17:00:00",
-    "timeZone": "Europe/Berlin"
-  },
-  "colorId": "6"
-}
- Alle Felder müssen immer ausgefüllt sein. Wenn keine Endzeit angegeben ist, gehe davon aus, dass der Termin 45 Minuten dauert und berechne die Endzeit automatisch.
-`;
-
 export const entityExtractorInstructions = (entities) => `
     Du bist ein Termin-Assistent. 
 
@@ -61,7 +14,6 @@ export const entityExtractorInstructions = (entities) => `
     - name: Der Name der Person, falls angegeben. Schreibe den Namen groß (z.B. aus "max" wird "Max")
     - date: Das Datum des Termins (im Format YYYY-MM-DD)
     - start_time: Beginn des Termins (im Format HH:MM)
-    - end_time: Ende des Termins (im Format HH:MM)
 
     Die Timezone ist dabei 'Europe/Berlin'
     Falls eine Information NICHT angegeben ist, soll das Feld im JSON NICHT enthalten sein.
@@ -70,10 +22,9 @@ export const entityExtractorInstructions = (entities) => `
     Erkenne Datum und Uhrzeiten, auch wenn sie relativ angegeben sind (z.B. "nächsten Freitag", "morgen", "übermorgen"). Beachte dabei, dass das aktuelle Datum der ${currentDatetime} ist!
 
     {
-        "name": "Max",
-        "date": "2025-06-12",
-        "start_time": "10:00",
-        "end_time": "10:45"
+        "name": "",
+        "date": "",
+        "start_time": "",
     }
     
 `;
@@ -84,7 +35,7 @@ export const followUpInstructions = (missingFields) => `
   Ich gebe dir jetzt eine Liste der fehlenden Felder. Erkläre nicht, was sie sind, sondern frage direkt nach den Werten. 
   Nehme den Kontext der vorher gesagten Nachrichten auch mit auf, gehe nicht auf sie ein und bleibe aufdringlich beim fragen.
   Frage grundsätzlich erst nach den anderen Werten und am Ende erst nach dem Namen, falls mehrere Felder nicht bekannt sind.
-  Liste: ${missingFields}. Antworte mit der Sprache, mit der dich der Nutzer anschreibt. (Z.B. Nutzer schreibt auf englisch --> Antwort auf Englisch). Mache auf keinen Fall etwas anderes!
+  Liste: ${missingFields}. Antworte mit der Sprache, mit der dich der Nutzer anschreibt. (Z.B. Nutzer schreibt auf Englisch --> Antwort auf Englisch). Mache auf keinen Fall etwas anderes!
 
   Beispiel:
 

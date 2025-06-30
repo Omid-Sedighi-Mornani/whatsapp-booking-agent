@@ -4,6 +4,7 @@ import "dotenv/config";
 import path from "path";
 import fs from "fs";
 import { google } from "googleapis";
+import { addToTime, toUTC } from "../utils/datetime.js";
 
 const CREDENTIALS_PATH = path.join(process.cwd(), process.env.CREDENTIALS_PATH);
 const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
@@ -12,7 +13,14 @@ const oAuth2Client = await authorize(credentials);
 const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
 
 export async function createEvent(entities) {
-  const { date, start_time, end_time, name, description } = entities;
+  const { date, start_time, name, description } = entities;
+  const end_time = addToTime(start_time, { minutes: 45 });
+
+  console.log(
+    "Availability:",
+    await checkAvailability(date, start_time, end_time)
+  );
+
   const event = {
     summary: `Nachhilfestunde mit ${name}`,
     description: description || "",
@@ -36,4 +44,21 @@ export async function addEvent(event) {
     resource: event,
   });
   console.log("Termin wurde erfolgreich erstellt:", res.data.htmlLink);
+}
+
+export async function checkAvailability(date, start_time, end_time) {
+  const start_date = toUTC(`${date}T${start_time}`);
+  const end_date = toUTC(`${date}T${end_time}`);
+  console.log(start_date, end_date);
+  const res = await calendar.events.list({
+    calendarId: "primary",
+    timeMin: start_date,
+    timeMax: end_date,
+    singleEvents: true,
+    timeZone: "Europe/Berlin",
+  });
+
+  const events = res.data.items;
+
+  return events.length === 0;
 }

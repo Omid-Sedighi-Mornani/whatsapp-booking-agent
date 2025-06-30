@@ -1,7 +1,7 @@
 const userSessions = new Map();
 
 export class Session {
-  #required = ["name", "date", "start_time", "end_time"];
+  #required = ["name", "date", "start_time"];
   constructor(userId) {
     this.entities = {};
     this.messages = [];
@@ -35,7 +35,7 @@ export class Session {
   }
 
   getMissingEntities() {
-    return [...this.#required.filter((field) => !this.entities[field])];
+    return [this.#required.filter((field) => !this.entities[field])];
   }
 
   setConfirmed(confirmed) {

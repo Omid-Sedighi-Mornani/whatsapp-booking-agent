@@ -17,8 +17,7 @@ client.on("ready", () => {
   console.log("Client is ready!");
 });
 
-client.on("authenticated", (clientSession) => {
-  console.log(clientSession);
+client.on("authenticated", () => {
   console.log("Successfully authenticated client!");
 });
 
