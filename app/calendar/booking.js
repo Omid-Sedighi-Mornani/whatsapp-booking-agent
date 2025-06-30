@@ -12,9 +12,10 @@ const oAuth2Client = await authorize(credentials);
 const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
 
 export async function createEvent(entities) {
-  const { date, start_time, end_time, name } = entities;
+  const { date, start_time, end_time, name, description } = entities;
   const event = {
     summary: `Nachhilfestunde mit ${name}`,
+    description: description || "",
     start: {
       dateTime: `${date}T${start_time}:00`,
       timeZone: "Europe/Berlin",

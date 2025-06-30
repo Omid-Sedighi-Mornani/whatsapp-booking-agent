@@ -1,9 +1,10 @@
 import {
   entityExtractorInstructions,
   followUpInstructions,
+  bookingVerifierInstructions,
 } from "./instructions.js";
 import { Agent, run } from "@openai/agents";
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -19,26 +20,46 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 //   return JSON.parse(result.finalOutput);
 // }
 
-export async function extractFields(inputText) {
-  const whatsappAgent = new Agent({
-    name: "Entity Extractor",
-    instructions: entityExtractorInstructions,
+export async function extractFields(messages, entities) {
+  const completion = await client.chat.completions.create({
     model: "gpt-4.1-nano-2025-04-14",
+    messages: [
+      { role: "system", content: entityExtractorInstructions(entities) },
+      ...messages,
+    ],
   });
 
-  const result = await run(whatsappAgent, inputText);
+  const result = completion.choices[0].message.content;
 
-  return JSON.parse(result.finalOutput);
+  return JSON.parse(result);
 }
 
-export async function generateFollowUp(missingFields) {
-  const whatsappAgent = new Agent({
-    name: "Follow Up Agent",
-    instructions: followUpInstructions,
+export async function generateFollowUp(messages, missingFields) {
+  const completion = await client.chat.completions.create({
     model: "gpt-4.1-nano-2025-04-14",
+    messages: [
+      { role: "system", content: followUpInstructions(missingFields) },
+      ...messages,
+    ],
   });
 
-  const result = await run(whatsappAgent, missingFields.join(", "));
+  const result = completion.choices[0].message.content;
 
-  return result.finalOutput;
+  return result;
+}
+
+export async function checkIfBookingVerified(messages) {
+  const completion = await client.chat.completions.create({
+    model: "gpt-4.1-nano-2025-04-14",
+    messages: [
+      { role: "system", content: bookingVerifierInstructions },
+      ...messages,
+    ],
+  });
+
+  const result = completion.choices[0].message.content;
+
+  const bookingVerified = result.toLowerCase().includes("true");
+
+  return bookingVerified;
 }

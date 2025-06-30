@@ -1,4 +1,7 @@
-const currentDatetime = new Date();
+const currentDatetime = new Date()
+  .toLocaleString("sv-SE", { timeZone: "Europe/Berlin" })
+  .replace(" ", "T");
+
 export const instructions = `
 Du bist ein Assistent, der Nutzereingaben verarbeitet, um Google-Kalender-Termine zu erstellen.
 
@@ -46,10 +49,12 @@ Beispiel-JSON:
  Alle Felder müssen immer ausgefüllt sein. Wenn keine Endzeit angegeben ist, gehe davon aus, dass der Termin 45 Minuten dauert und berechne die Endzeit automatisch.
 `;
 
-export const entityExtractorInstructions = `
+export const entityExtractorInstructions = (entities) => `
     Du bist ein Termin-Assistent. 
 
     Deine Aufgabe ist es, aus der Nachricht des Nutzers die relevanten Informationen (Entities) zu extrahieren. 
+    Dabei bestehen folgende Entities bereits: ${entities}.
+    Ändere diese AUF KEINEN FALL ab, außer es ist explizit verlangt!
 
     Erkenne bitte folgende Entities, falls vorhanden:
 
@@ -57,7 +62,9 @@ export const entityExtractorInstructions = `
     - date: Das Datum des Termins (im Format YYYY-MM-DD)
     - start_time: Beginn des Termins (im Format HH:MM)
     - end_time: Ende des Termins (im Format HH:MM)
+    - description: Nehme den Kontext des Gesprächs auf und speichere ihn als kleine Beschreibung. Dieses Feld ist aber optional!
 
+    Die Timezone ist dabei 'Europe/Berlin'
     Falls eine Information nicht angegeben ist, soll das Feld im JSON NICHT enthalten sein.
     Gib immer ausschließlich ein JSON-Objekt in folgendem Format (Beispiel!) zurück:
 
@@ -72,24 +79,40 @@ export const entityExtractorInstructions = `
     
 `;
 
-export const followUpInstructions = `
+export const followUpInstructions = (missingFields) => `
   Du bist ein Termin-Assistent.
   Deine Aufgabe ist es, dem Nutzer eine freundliche, kurze Rückfrage zu stellen, wenn noch Informationen fehlen.
-  Ich gebe dir eine Liste der fehlenden Felder. Erkläre nicht, was sie sind, sondern frage direkt nach den Werten. 
-  Beispiele:
+  Ich gebe dir jetzt eine Liste der fehlenden Felder. Erkläre nicht, was sie sind, sondern frage direkt nach den Werten. 
+  Nehme den Kontext der vorher gesagten Nachrichten auch mit auf, gehe nicht auf sie ein und bleibe aufdringlich beim fragen.
+  Liste: ${missingFields}
+
+  Beispiel:
 
   Fehlende Felder:
   ["date"]
   Antwort:
   "Für welches Datum möchtest du den Termin buchen?"
 
-  Fehlende Felder:
-  ["start_time", "end_time"]
+  ["name"]
   Antwort:
-  "Zu welcher Uhrzeit soll der Termin beginnen und wann soll er enden?"
+  "Wie heißt du?"
 
-  Fehlende Felder:
-  ["name", "date", "start_time"]
-  Antwort:
-  "Wie lautet dein Name, wann soll der Termin stattfinden und um wie viel Uhr möchtest du starten?"
+
+  `;
+
+export const bookingVerifierInstructions = `
+  Du bist ein Termin-Assistent. 
+  Erkenne aus dem Kontext heraus, ob die Buchung bestätigt worden ist oder nicht. 
+  Gebe entweder 'true' zurück, wenn das der Fall ist und sonst 'false'. KEINE ANDEREN Outputs sind erlaubt!
+
+  Beispiele:
+
+  Nutzer: "Ja, das passt für mich. Bitte buchen Sie den Termin."
+  Output: true
+
+  Nutzer: "Nein, ändere bitte ändere noch die Uhrzeit auf 12 Uhr."
+  Output: false
+
+  Nutzer: "Ich bin mir noch nicht sicher."
+  Output: false
   `;
