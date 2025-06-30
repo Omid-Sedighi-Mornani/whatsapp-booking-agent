@@ -2,10 +2,11 @@ const userSessions = new Map();
 
 export class Session {
   #required = ["name", "date", "start_time", "end_time"];
-  constructor() {
+  constructor(userId) {
     this.entities = {};
     this.messages = [];
     this.bookingConfirmed = false;
+    this.userId = userId;
   }
 
   logToConsole() {
@@ -13,6 +14,8 @@ export class Session {
     console.log(`Messages:\n${JSON.stringify(this.messages, null, 2)}\n`);
     console.log(`Entities:\n${JSON.stringify(this.entities, null, 2)}\n`);
     console.log(`Confirmed:\n${this.bookingConfirmed}\n`);
+    console.log(`Complete:\n${this.isComplete()}`);
+    console.log(`Missing values:\n${this.getMissingEntities()}`);
   }
 
   addMessage(role, content) {
@@ -32,7 +35,7 @@ export class Session {
   }
 
   getMissingEntities() {
-    return this.#required.filter((field) => !this.entities[field]);
+    return [...this.#required.filter((field) => !this.entities[field])];
   }
 
   setConfirmed(confirmed) {
@@ -47,7 +50,7 @@ export class Session {
 export async function getSession(userId) {
   let session = userSessions.get(userId);
   if (!session) {
-    session = new Session();
+    session = new Session(userId);
     userSessions.set(userId, session);
   }
   return session;

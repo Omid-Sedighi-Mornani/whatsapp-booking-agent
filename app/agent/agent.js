@@ -43,7 +43,7 @@ export async function checkIfBookingConfirmed(messages) {
     model: "gpt-4o-mini",
     messages: [
       { role: "system", content: bookingVerifierInstructions },
-      ...messages,
+      ...messages.slice(-2),
     ],
     temperature: 0,
     response_format: {

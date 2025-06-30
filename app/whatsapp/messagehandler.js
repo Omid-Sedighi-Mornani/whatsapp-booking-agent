@@ -8,50 +8,34 @@ import { deleteSession, getSession, saveSession } from "./sessionmanager.js";
 
 export async function handleMessage(userId, message) {
   const session = await getSession(userId);
-
   session.addMessage("user", message);
 
-  const extractedFields = await extractFields(
-    session.messages,
-    session.entities
-  );
+  const confirmed = await checkIfBookingConfirmed(session.messages);
+  session.setConfirmed(confirmed);
 
-  session.addEntities(extractedFields);
+  if (!(session.isComplete() && session.isConfirmed())) {
+    const newEntities = await extractFields(session.messages, session.entities);
+    session.addEntities(newEntities);
+  }
 
-  let replyMessage = null;
+  if (session.isConfirmed()) {
+    return tryCloseSession(session);
+  }
 
-  if (!session.isComplete()) {
+  let replyMessage;
+
+  if (session.isComplete()) {
+    replyMessage = await generateConfirmationMessage(session.entities);
+  } else {
     replyMessage = await generateFollowUp(
       session.messages,
       session.getMissingEntities()
     );
-
-    session.addMessage("assistant", replyMessage);
-    session.logToConsole();
-    await saveSession(userId, session);
-    return replyMessage;
   }
 
-  const bookingConfirmed = await checkIfBookingConfirmed(session.messages);
-  session.setConfirmed(bookingConfirmed);
+  session.addMessage("assistant", replyMessage);
+  saveSession(session.userId, session);
 
-  if (!session.isConfirmed()) {
-    replyMessage = await generateConfirmationMessage(session.entities);
-    session.logToConsole();
-    return replyMessage;
-  }
-
-  replyMessage =
-    "Alles klar! Dein Termin ist jetzt gebucht!\nWenn du möchtest kannst du weitere Termine buchen!";
-
-  try {
-    await createEvent(session.entities);
-  } catch (err) {
-    replyMessage =
-      "Es ist leider ein Fehler aufgetreten! Versuche es bitte noch einmal!";
-  }
-  session.logToConsole();
-  deleteSession(userId);
   return replyMessage;
 }
 
@@ -60,4 +44,15 @@ async function generateConfirmationMessage(entities) {
   const replyMessage = `Okay alles klar! Ich habe deinen Termin jetzt aufgenommen, sind die Angaben korrekt?\n\n- Name: *${name}*\n- Datum: *${date}*\n- Startzeit: *${start_time}*\n- Endzeit: *${end_time}*`;
 
   return replyMessage;
+}
+
+async function tryCloseSession(session) {
+  try {
+    await createEvent(session.entities);
+    deleteSession(session.userId);
+    return "Alles klar! Termin wurde gebucht!";
+  } catch {
+    deleteSession(session.userId);
+    return "Es ist leider ein Fehler aufgetreten probiere es erneut!";
+  }
 }

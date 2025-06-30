@@ -62,7 +62,6 @@ export const entityExtractorInstructions = (entities) => `
     - date: Das Datum des Termins (im Format YYYY-MM-DD)
     - start_time: Beginn des Termins (im Format HH:MM)
     - end_time: Ende des Termins (im Format HH:MM)
-    - description: Nehme den Kontext des Gesprächs auf und speichere ihn als kleine Beschreibung. Dieses Feld ist aber optional!
 
     Die Timezone ist dabei 'Europe/Berlin'
     Falls eine Information NICHT angegeben ist, soll das Feld im JSON NICHT enthalten sein.
@@ -85,7 +84,7 @@ export const followUpInstructions = (missingFields) => `
   Ich gebe dir jetzt eine Liste der fehlenden Felder. Erkläre nicht, was sie sind, sondern frage direkt nach den Werten. 
   Nehme den Kontext der vorher gesagten Nachrichten auch mit auf, gehe nicht auf sie ein und bleibe aufdringlich beim fragen.
   Frage grundsätzlich erst nach den anderen Werten und am Ende erst nach dem Namen, falls mehrere Felder nicht bekannt sind.
-  Liste: ${missingFields}. Antworte mti der Sprache, mit der dich der Nutzer anschreibt. (Z.B. Nutzer schreibt auf englisch --> Antwort auf Englisch). Mache auf keinen Fall etwas anderes!
+  Liste: ${missingFields}. Antworte mit der Sprache, mit der dich der Nutzer anschreibt. (Z.B. Nutzer schreibt auf englisch --> Antwort auf Englisch). Mache auf keinen Fall etwas anderes!
 
   Beispiel:
 
