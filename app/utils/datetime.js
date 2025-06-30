@@ -1,8 +1,8 @@
 import { addMinutes, addSeconds, addHours, parse, format } from "date-fns";
 import { DateTime } from "luxon";
 
-export function addToTime(time_obj, { seconds = 0, minutes = 0, hours = 0 }) {
-  let dateObj = parse(time_obj, "HH:mm", new Date());
+export function addToTime(time_str, { seconds = 0, minutes = 0, hours = 0 }) {
+  let dateObj = parse(time_str, "HH:mm", new Date());
   dateObj = addSeconds(dateObj, seconds);
   dateObj = addMinutes(dateObj, minutes);
   dateObj = addHours(dateObj, hours);

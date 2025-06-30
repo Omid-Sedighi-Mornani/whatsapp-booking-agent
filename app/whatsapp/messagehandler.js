@@ -20,6 +20,11 @@ export async function handleMessage(userId, message) {
   }
 
   if (session.isConfirmed()) {
+    const available = await checkAvailability(session.entities);
+    if (!available) {
+      manager.deleteSession(userId);
+      return "Omid kann da leider nicht sorry!";
+    }
     return tryCloseSession(session);
   }
 

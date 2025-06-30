@@ -30,7 +30,7 @@ export async function generateFollowUp(messages, missingFields) {
       { role: "system", content: followUpInstructions(missingFields) },
       ...messages,
     ],
-    temperature: 0.7,
+    temperature: 0.3,
   });
 
   const result = completion.choices[0].message.content;
