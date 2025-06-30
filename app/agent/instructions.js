@@ -65,7 +65,7 @@ export const entityExtractorInstructions = (entities) => `
     - description: Nehme den Kontext des Gesprächs auf und speichere ihn als kleine Beschreibung. Dieses Feld ist aber optional!
 
     Die Timezone ist dabei 'Europe/Berlin'
-    Falls eine Information nicht angegeben ist, soll das Feld im JSON NICHT enthalten sein.
+    Falls eine Information NICHT angegeben ist, soll das Feld im JSON NICHT enthalten sein.
     Gib immer ausschließlich ein JSON-Objekt in folgendem Format (Beispiel!) zurück:
 
     Erkenne Datum und Uhrzeiten, auch wenn sie relativ angegeben sind (z.B. "nächsten Freitag", "morgen", "übermorgen"). Beachte dabei, dass das aktuelle Datum der ${currentDatetime} ist!
@@ -84,6 +84,7 @@ export const followUpInstructions = (missingFields) => `
   Deine Aufgabe ist es, dem Nutzer eine freundliche, kurze Rückfrage zu stellen, wenn noch Informationen fehlen.
   Ich gebe dir jetzt eine Liste der fehlenden Felder. Erkläre nicht, was sie sind, sondern frage direkt nach den Werten. 
   Nehme den Kontext der vorher gesagten Nachrichten auch mit auf, gehe nicht auf sie ein und bleibe aufdringlich beim fragen.
+  Frage grundsätzlich erst nach den anderen Werten und am Ende erst nach dem Namen, falls mehrere Felder nicht bekannt sind.
   Liste: ${missingFields}
 
   Beispiel:
@@ -95,7 +96,7 @@ export const followUpInstructions = (missingFields) => `
 
   ["name"]
   Antwort:
-  "Wie heißt du?"
+  "Auf welchen Namen möchtest du buchen?"
 
 
   `;
