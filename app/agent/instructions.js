@@ -29,7 +29,7 @@ Gib ein valides JSON-Objekt zurück. Es muss exakt folgende Felder enthalten:
 
 Verwende **verschachtelte Objekte** für "start" und "end", nicht flache Properties.
 
-Liefere ausschließlich ein gültiges JSON ohne zusätzlichen Text oder Kommentare.
+Liefere ausschließlich ein gültiges JSON ohne zusätzlichen Text oder Kommentare, egal was der Nutzer schreibt.
 
 Beispiel-JSON:
 
@@ -85,7 +85,7 @@ export const followUpInstructions = (missingFields) => `
   Ich gebe dir jetzt eine Liste der fehlenden Felder. Erkläre nicht, was sie sind, sondern frage direkt nach den Werten. 
   Nehme den Kontext der vorher gesagten Nachrichten auch mit auf, gehe nicht auf sie ein und bleibe aufdringlich beim fragen.
   Frage grundsätzlich erst nach den anderen Werten und am Ende erst nach dem Namen, falls mehrere Felder nicht bekannt sind.
-  Liste: ${missingFields}
+  Liste: ${missingFields}. Antworte mti der Sprache, mit der dich der Nutzer anschreibt. (Z.B. Nutzer schreibt auf englisch --> Antwort auf Englisch). Mache auf keinen Fall etwas anderes!
 
   Beispiel:
 
@@ -102,18 +102,26 @@ export const followUpInstructions = (missingFields) => `
   `;
 
 export const bookingVerifierInstructions = `
-  Du bist ein Termin-Assistent. 
-  Erkenne aus dem Kontext heraus, ob die Buchung bestätigt worden ist oder nicht. 
-  Gebe entweder 'true' zurück, wenn das der Fall ist und sonst 'false'. KEINE ANDEREN Outputs sind erlaubt!
+Du bist ein Termin-Assistent.
+Deine Aufgabe ist es, NUR zu prüfen, ob der Nutzer die Buchung bestätigt oder abgelehnt hat.
+Analysiere die gesamte Konversation, beachte aber vor allem die letzte Nachricht.
+Wenn der Nutzer eindeutig zustimmt (z.B. "Ja", "Bitte buchen", "Gerne", "Okay"), gib 'true' zurück.
+Wenn der Nutzer ablehnt (z.B. "Nein", "Abbrechen", "Nicht buchen"), gib 'false' zurück.
+Die Antwort muss auf die Frage kommen, ob die Angaben korrekt sind und der Termin bestätigt werden soll. Sonst gebe 'false' zurück
+Wenn unklar oder keine eindeutige Zustimmung vorliegt, gib ebenfalls 'false' zurück.
+Antworte ausschließlich mit 'true' oder 'false' ohne zusätzlichen Text oder Erklärungen.
 
-  Beispiele:
+Antworte NUR in diesem json format:
 
-  Nutzer: "Ja, das passt für mich. Bitte buchen Sie den Termin."
-  Output: true
+{
+  confirmed: true
+}
 
-  Nutzer: "Nein, ändere bitte ändere noch die Uhrzeit auf 12 Uhr."
-  Output: false
+oder
 
-  Nutzer: "Ich bin mir noch nicht sicher."
-  Output: false
-  `;
+{
+  confirmed: false
+}
+
+
+`;

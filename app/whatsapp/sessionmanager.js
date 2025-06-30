@@ -5,14 +5,14 @@ export class Session {
   constructor() {
     this.entities = {};
     this.messages = [];
-    this.bookingVerified = false;
+    this.bookingConfirmed = false;
   }
 
   logToConsole() {
     console.log("--------------------------");
     console.log(`Messages:\n${JSON.stringify(this.messages, null, 2)}\n`);
     console.log(`Entities:\n${JSON.stringify(this.entities, null, 2)}\n`);
-    console.log(`Verified:\n${this.bookingVerified}\n`);
+    console.log(`Confirmed:\n${this.bookingConfirmed}\n`);
   }
 
   addMessage(role, content) {
@@ -23,8 +23,8 @@ export class Session {
     return this.#required.every((field) => this.entities[field]);
   }
 
-  isVerified() {
-    return this.bookingVerified;
+  isConfirmed() {
+    return this.bookingConfirmed;
   }
 
   addEntities(newEntities) {
@@ -35,12 +35,8 @@ export class Session {
     return this.#required.filter((field) => !this.entities[field]);
   }
 
-  markVerified() {
-    this.bookingVerified = true;
-  }
-
-  setVerified(verified) {
-    this.bookingVerified = verified;
+  setConfirmed(confirmed) {
+    this.bookingConfirmed = confirmed;
   }
 }
 

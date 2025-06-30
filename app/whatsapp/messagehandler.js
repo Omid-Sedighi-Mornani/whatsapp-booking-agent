@@ -1,7 +1,7 @@
 import {
   extractFields,
   generateFollowUp,
-  checkIfBookingVerified,
+  checkIfBookingConfirmed,
 } from "../agent/agent.js";
 import { createEvent } from "../calendar/booking.js";
 import { deleteSession, getSession, saveSession } from "./sessionmanager.js";
@@ -32,17 +32,24 @@ export async function handleMessage(userId, message) {
     return replyMessage;
   }
 
-  const bookingVerified = await checkIfBookingVerified(session.messages);
-  session.setVerified(bookingVerified);
+  const bookingConfirmed = await checkIfBookingConfirmed(session.messages);
+  session.setConfirmed(bookingConfirmed);
 
-  if (!session.isVerified()) {
+  if (!session.isConfirmed()) {
     replyMessage = await generateConfirmationMessage(session.entities);
     session.logToConsole();
     return replyMessage;
   }
 
-  replyMessage = "Alles klar! Dein Termin ist jetzt gebucht!";
-  await createEvent(session.entities);
+  replyMessage =
+    "Alles klar! Dein Termin ist jetzt gebucht!\nWenn du möchtest kannst du weitere Termine buchen!";
+
+  try {
+    await createEvent(session.entities);
+  } catch (err) {
+    replyMessage =
+      "Es ist leider ein Fehler aufgetreten! Versuche es bitte noch einmal!";
+  }
   session.logToConsole();
   deleteSession(userId);
   return replyMessage;

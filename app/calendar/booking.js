@@ -31,14 +31,9 @@ export async function createEvent(entities) {
 }
 
 export async function addEvent(event) {
-  calendar.events.insert(
-    { calendarId: "primary", resource: event },
-    (err, res) => {
-      if (err) {
-        console.error("Fehler beim Erstellen des Termins:", err);
-        return;
-      }
-      console.log("Termin wurde erfolgreich erstellt:", res.data.htmlLink);
-    }
-  );
+  const res = await calendar.events.insert({
+    calendarId: "primary",
+    resource: event,
+  });
+  console.log("Termin wurde erfolgreich erstellt:", res.data.htmlLink);
 }
