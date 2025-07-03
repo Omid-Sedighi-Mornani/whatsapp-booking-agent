@@ -14,7 +14,7 @@ const oAuth2Client = await authorize(credentials);
 const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
 
 export async function createEvent(entities) {
-  const { date, start_time, name, description } = entities;
+  const { date, time: start_time, name, description } = entities;
   const end_time = addToTime(start_time, { minutes: 45 });
 
   const event = {
@@ -61,5 +61,3 @@ export async function checkAvailability({
 
   return events.length === 0;
 }
-
-export async function giveFreeSlots(date) {}
