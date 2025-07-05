@@ -1,6 +1,17 @@
 import * as agent from "../agent/agent.js";
 import * as manager from "./sessionmanager.js";
-import { createEvent, checkAvailability } from "../calendar/booking.js";
+import { startOfToday } from "date-fns";
+import {
+  createEvent,
+  checkAvailability,
+  getFreeTimeSlots,
+  getEvents,
+} from "../calendar/booking.js";
+import {
+  addToDateTime,
+  formatFreeTimeSlots,
+  UTCtoTimeZone,
+} from "../utils/datetime.js";
 
 export async function handleMessage(userId, message) {
   const session = await manager.getSession(userId);
@@ -8,9 +19,29 @@ export async function handleMessage(userId, message) {
 
   try {
     const response = await agent.generateSessionResponse(session);
-    const { entities, confirmed, reply: replyMessage } = response.resp;
+    const { entities, confirmed, reply: replyMessage, intent } = response.resp;
     session.entities = entities;
     session.addMessage("assistant", replyMessage);
+
+    if (intent == "suggest_times") {
+      const todayDateStr = startOfToday().toISOString();
+      const relevantDate = entities.date ?? todayDateStr;
+
+      const lowerBound = addToDateTime(relevantDate, { hours: 9 });
+      const upperBound = addToDateTime(relevantDate, { hours: 22 });
+
+      const blockedEvents = await getEvents(relevantDate, {
+        days: 1,
+      });
+
+      const freeSlots = await getFreeTimeSlots(
+        blockedEvents,
+        lowerBound,
+        upperBound
+      );
+
+      return formatFreeTimeSlots(freeSlots, "Europe/Berlin");
+    }
 
     if (confirmed) {
       const available = await checkAvailability(session.entities);

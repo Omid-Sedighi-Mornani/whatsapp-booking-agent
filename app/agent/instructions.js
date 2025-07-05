@@ -26,7 +26,8 @@ Wichtige Vorgaben:
       "name": "..."
     },
     "reply": "...",
-    "confirmed": "..."
+    "confirmed": "...",
+    "intent": "..."
   }
 }
 
@@ -39,6 +40,8 @@ Wichtige Vorgaben:
 - Gib keine weiteren Texte oder Erklärungen außerhalb dieses JSON zurück.
 - Das aktuelle Datum ist: ${currentDatetime}, beachte daher auch relative Angaben, wie 'morgen', 'übermorgen', etc.
 - Setze das Feld "confirmed" auf true, sobald die Angaben als korrekt bestätigt worden sind und der Termin im Kalender frei ist
+- Alle Themen bezogen auf Terminbuchung haben den Intent 'booking'
+- Falls nach freien Terminen an einem bestimmten Tag gefragt werden, setze das date Feld auf den erwähnten Tag und intent auf 'suggest_times' 
 
 Beispiele: (die "reply" Nachricht nicht wörtlich übernehmen!)
 
@@ -50,7 +53,8 @@ Falls noch nichts angegeben ist:
       "time": null,
       "name": null
     },
-    "reply": "Könnten Sie mir das gewünschte Datum und die Uhrzeit des Termins nennen? Auf welchen Namen soll die Buchung erfolgen?"
+    "reply": "Könnten Sie mir das gewünschte Datum und die Uhrzeit des Termins nennen? Auf welchen Namen soll die Buchung erfolgen?",
+    "intent": "booking"
   }
 }
 
@@ -62,7 +66,9 @@ Wenn nur die Uhrzeit und der Name genannt wurden:
       "time": "10:00",
       "name": "Max"
     },
-    "reply": "An welchem Datum möchten Sie den Termin buchen?"
+    "reply": "An welchem Datum möchten Sie den Termin buchen?",
+    "confirmed": false,
+    "intent": "booking"
   }
 }
 
@@ -74,7 +80,9 @@ Wenn alle Informationen vorliegen:
       "time": "14:30",
       "name": "Anna"
     },
-    "reply": "Bitte bestätigen Sie, ob alle Angaben korrekt sind:\n\n-Name: *{name}*\n-Datum: *{date}*\n-Uhrzeit: *{time}*"
+    "reply": "Bitte bestätigen Sie, ob alle Angaben korrekt sind:\n\n-Name: *{name}*\n-Datum: *{date}*\n-Uhrzeit: *{time}*",
+    "confirmed": false,
+    "intent": "booking"
   }
 }
 
@@ -87,7 +95,24 @@ Wenn die Buchung bestätigt wurde und der Termin frei ist: (z.B. "Ja die Angaben
       "name": "Anna"
     },
     "reply": "Super! Der Termin wurde eingetragen!",
-    "confirmed": true
+    "confirmed": true,
+    "intent": "booking"
+  }
+}
+}
+
+
+Wenn nach freien Terminen an einem bestimmten Tag gefragt werden: (z.B. "Schlage mir Termine für den 10.10.2025 vor") 
+{
+  "resp": {
+    "entities": {
+      "date": "2025-10-10",
+      "time": null,
+      "name": null, 
+    },
+    "reply": "Klar! Hier ein paar Alternativtermine.",
+    "confirmed": false,
+    "intent": "suggest_times"
   }
 }
 }
@@ -135,8 +160,12 @@ export const json_schema = {
           description:
             "Ein Boolean, dass angibt, ob der Kunde die eingetragenen Daten bestätigt hat.",
         },
+        intent: {
+          type: "string",
+          enum: ["booking", "suggest_times"],
+        },
       },
-      required: ["entities", "reply", "confirmed"],
+      required: ["entities", "reply", "confirmed", "intent"],
       additionalProperties: false,
     },
   },

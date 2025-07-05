@@ -9,7 +9,6 @@ import {
   addMonths,
   addYears,
   parseISO,
-  formatISO,
 } from "date-fns";
 import { DateTime } from "luxon";
 
@@ -64,4 +63,32 @@ export function toUTC(date) {
   }
 
   return localDate.toUTC().toISO();
+}
+
+export function UTCtoTimeZone(dateStr, timeZone = "Europe/Berlin") {
+  return DateTime.fromISO(dateStr, { zone: "utc" }).setZone(timeZone).toISO();
+}
+
+export function formatFreeTimeSlots(slots, timeZone = "Europe/Berlin") {
+  const referringDate = DateTime.fromISO(slots[0].start).toFormat("dd.MM.yyyy");
+  slots = slots.map(({ start, end }) => {
+    return {
+      start: UTCtoTimeZone(start, timeZone),
+      end: UTCtoTimeZone(end, timeZone),
+    };
+  });
+
+  if (!slots || slots.length === 0) {
+    return "Es wurden keine freien Zeitfenster gefunden.";
+  }
+
+  const lines = slots.map(({ start, end }) => {
+    const startTime = DateTime.fromISO(start).toFormat("HH:mm");
+    const endTime = DateTime.fromISO(end).toFormat("HH:mm");
+    return `- ${startTime} - ${endTime} Uhr`;
+  });
+
+  return `Folgende Zeitfenster für den *${referringDate}* sind frei:\n\n${lines.join(
+    "\n"
+  )}`;
 }

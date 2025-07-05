@@ -61,8 +61,8 @@ export async function checkAvailability({
   return events.length === 0;
 }
 
-export async function getEvents(dateObj) {
-  const timeMin = new Date();
+export async function getEvents(dateStr, dateObj) {
+  const timeMin = new Date(dateStr);
   const timeMax = addToDateTime(timeMin, dateObj);
 
   const res = await calendar.events.list({
@@ -81,7 +81,7 @@ export async function getEvents(dateObj) {
   }));
 }
 
-export async function getFreeTimeSlots(events) {
+export async function getFreeTimeSlots(events, rangeStartStr, rangeEndStr) {
   const sorted = events
     .map((e) => ({
       start: new Date(e.start),
@@ -91,8 +91,11 @@ export async function getFreeTimeSlots(events) {
 
   const freeSlots = [];
 
-  let lastEnd = sorted[0].start;
-  const rangeEnd = sorted[sorted.length - 1].end;
+  const rangeStart = new Date(rangeStartStr) ?? new Date(sorted[0].start);
+  const rangeEnd =
+    new Date(rangeEndStr) ?? new Date(sorted[sorted.length - 1].end);
+
+  let lastEnd = rangeStart;
 
   sorted.forEach((event) => {
     if (event.start > lastEnd) {
@@ -104,14 +107,14 @@ export async function getFreeTimeSlots(events) {
     if (event.end > lastEnd) {
       lastEnd = event.end;
     }
-
-    if (lastEnd < new Date(rangeEnd)) {
-      freeSlots.push({
-        start: lastEnd.toISOString(),
-        end: rangeEnd.toISOString(),
-      });
-    }
   });
+
+  if (lastEnd < new Date(rangeEnd)) {
+    freeSlots.push({
+      start: lastEnd.toISOString(),
+      end: rangeEnd.toISOString(),
+    });
+  }
 
   return freeSlots;
 }
