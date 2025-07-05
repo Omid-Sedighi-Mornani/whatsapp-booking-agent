@@ -9,11 +9,16 @@ export async function generateSessionResponse(session) {
     messages: [{ role: "system", content: instructions }, ...session.messages],
     response_format: {
       type: "json_schema",
-      json_schema: { schema: json_schema, name: "booking_schema" },
+      json_schema: {
+        schema: json_schema,
+        name: "booking_schema",
+        strict: true,
+      },
     },
   });
 
   const response = JSON.parse(completion.choices[0].message.content);
 
+  console.log(response);
   return response;
 }

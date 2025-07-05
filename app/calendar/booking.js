@@ -4,8 +4,7 @@ import "dotenv/config";
 import path from "path";
 import fs from "fs";
 import { google } from "googleapis";
-import { addToTime, toUTC } from "../utils/datetime.js";
-import { addMinutes } from "date-fns";
+import { addToDateTime, addToTime, toUTC } from "../utils/datetime.js";
 
 const CREDENTIALS_PATH = path.join(process.cwd(), process.env.CREDENTIALS_PATH);
 const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
@@ -44,10 +43,10 @@ export async function addEvent(event) {
 
 export async function checkAvailability({
   date,
-  start_time,
-  end_time = addToTime(start_time, { minutes: 45 }),
+  time,
+  end_time = addToTime(time, { minutes: 45 }),
 }) {
-  const start_date = toUTC(`${date}T${start_time}`);
+  const start_date = toUTC(`${date}T${time}`);
   const end_date = toUTC(`${date}T${end_time}`);
   const res = await calendar.events.list({
     calendarId: "primary",
@@ -60,4 +59,59 @@ export async function checkAvailability({
   const events = res.data.items;
 
   return events.length === 0;
+}
+
+export async function getEvents(dateObj) {
+  const timeMin = new Date();
+  const timeMax = addToDateTime(timeMin, dateObj);
+
+  const res = await calendar.events.list({
+    calendarId: "primary",
+    timeMin,
+    timeMax,
+    singleEvents: true,
+    timeZone: "Europe/Berlin",
+  });
+
+  const events = res.data.items;
+
+  return events.map((event) => ({
+    start: event.start.dateTime,
+    end: event.end.dateTime,
+  }));
+}
+
+export async function getFreeTimeSlots(events) {
+  const sorted = events
+    .map((e) => ({
+      start: new Date(e.start),
+      end: new Date(e.end),
+    }))
+    .sort((a, b) => a.start - b.start);
+
+  const freeSlots = [];
+
+  let lastEnd = sorted[0].start;
+  const rangeEnd = sorted[sorted.length - 1].end;
+
+  sorted.forEach((event) => {
+    if (event.start > lastEnd) {
+      freeSlots.push({
+        start: lastEnd.toISOString(),
+        end: event.start.toISOString(),
+      });
+    }
+    if (event.end > lastEnd) {
+      lastEnd = event.end;
+    }
+
+    if (lastEnd < new Date(rangeEnd)) {
+      freeSlots.push({
+        start: lastEnd.toISOString(),
+        end: rangeEnd.toISOString(),
+      });
+    }
+  });
+
+  return freeSlots;
 }

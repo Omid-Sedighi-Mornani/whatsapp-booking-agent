@@ -30,13 +30,29 @@ Wichtige Vorgaben:
   }
 }
 
+  
+- Falls in der Konversation nicht konkret über eine Terminbuchung gesprochen wird, sollen alle bisher bekannten Daten (entities) extrahiert werden. Gib als reply eine höfliche Nachricht zurück, dass dieser Assistent ausschließlich für Terminbuchungen zuständig ist und die Person bitte beim Thema bleiben soll. Begrüßungen am Anfang sollten aber freundlich aufgenommen werden.
+
 - Alle Felder müssen vorhanden sein.
 - Nicht erwähnte oder unklare Felder immer mit null belegen.
 - Die reply-Nachricht soll höflich und kurz nach fehlenden Angaben fragen oder die Buchung bestätigen, falls alle Felder vollständig sind.
 - Gib keine weiteren Texte oder Erklärungen außerhalb dieses JSON zurück.
 - Das aktuelle Datum ist: ${currentDatetime}, beachte daher auch relative Angaben, wie 'morgen', 'übermorgen', etc.
+- Setze das Feld "confirmed" auf true, sobald die Angaben als korrekt bestätigt worden sind und der Termin im Kalender frei ist
 
-Beispiele:
+Beispiele: (die "reply" Nachricht nicht wörtlich übernehmen!)
+
+Falls noch nichts angegeben ist:
+{
+  "resp": {
+    "entities": {
+      "date": null,
+      "time": null,
+      "name": null
+    },
+    "reply": "Könnten Sie mir das gewünschte Datum und die Uhrzeit des Termins nennen? Auf welchen Namen soll die Buchung erfolgen?"
+  }
+}
 
 Wenn nur die Uhrzeit und der Name genannt wurden:
 {
@@ -62,7 +78,7 @@ Wenn alle Informationen vorliegen:
   }
 }
 
-Wenn die Buchung bestätigt wurde: (z.B. "Ja die Angaben sind korrekt" oder ähnliches, also Zustimmung)
+Wenn die Buchung bestätigt wurde und der Termin frei ist: (z.B. "Ja die Angaben sind korrekt" oder ähnliches, also Zustimmung)
 {
   "resp": {
     "entities": {
@@ -70,10 +86,12 @@ Wenn die Buchung bestätigt wurde: (z.B. "Ja die Angaben sind korrekt" oder ähn
       "time": "14:30",
       "name": "Anna"
     },
-    "reply": "Der Termin wurde eingetragen.",
+    "reply": "Super! Der Termin wurde eingetragen!",
     "confirmed": true
   }
 }
+}
+
 `;
 
 export const json_schema = {
@@ -97,7 +115,6 @@ export const json_schema = {
             },
             time: {
               type: ["string", "null"],
-              format: "time",
               description: "Die Startzeit des Termins in HH:MM",
             },
             name: {
@@ -106,6 +123,7 @@ export const json_schema = {
             },
           },
           required: ["date", "time", "name"],
+          additionalProperties: false,
         },
         reply: {
           type: "string",
@@ -118,7 +136,10 @@ export const json_schema = {
             "Ein Boolean, dass angibt, ob der Kunde die eingetragenen Daten bestätigt hat.",
         },
       },
-      required: ["entities", "reply"],
+      required: ["entities", "reply", "confirmed"],
+      additionalProperties: false,
     },
   },
+  required: ["resp"],
+  additionalProperties: false,
 };
