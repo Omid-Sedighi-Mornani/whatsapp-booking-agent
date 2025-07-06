@@ -4,13 +4,21 @@ import "dotenv/config";
 import path from "path";
 import fs from "fs";
 import { google } from "googleapis";
-import { addToDateTime, addToTime, toUTC } from "../utils/datetime.js";
+import {
+  addToDateTime,
+  addToTime,
+  timeStringToDecimal,
+  toUTC,
+} from "../utils/datetime.js";
+import { BOOKING_OPTIONS } from "../index.js";
 
 const CREDENTIALS_PATH = path.join(process.cwd(), process.env.CREDENTIALS_PATH);
 const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
 
 const oAuth2Client = await authorize(credentials);
 const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
+
+// adding events
 
 export async function createEvent(entities) {
   const { date, time: start_time, name, description } = entities;
@@ -29,17 +37,18 @@ export async function createEvent(entities) {
     },
     colorId: "6",
   };
-  console.log(event);
   await addEvent(event);
 }
 
-export async function addEvent(event) {
+async function addEvent(event) {
   const res = await calendar.events.insert({
     calendarId: "primary",
     resource: event,
   });
   console.log("Termin wurde erfolgreich erstellt:", res.data.htmlLink);
 }
+
+// checking for existing events
 
 export async function checkAvailability({
   date,
@@ -81,7 +90,9 @@ export async function getEvents(dateStr, dateObj) {
   }));
 }
 
-export async function getFreeTimeSlots(events, rangeStartStr, rangeEndStr) {
+// calculating free slots from events
+
+async function getFreeTimeSlots(events, rangeStartStr, rangeEndStr) {
   const sorted = events
     .map((e) => ({
       start: new Date(e.start),
@@ -115,6 +126,34 @@ export async function getFreeTimeSlots(events, rangeStartStr, rangeEndStr) {
       end: rangeEnd.toISOString(),
     });
   }
+
+  return freeSlots;
+}
+
+export async function suggestFreeSlotsForDate(
+  date,
+  start_time = BOOKING_OPTIONS.workingHours.start,
+  end_time = BOOKING_OPTIONS.workingHours.end
+) {
+  const startHours = timeStringToDecimal(start_time);
+  const endHours = timeStringToDecimal(end_time);
+
+  const lowerBound = addToDateTime(date, {
+    hours: startHours,
+  });
+  const upperBound = addToDateTime(date, {
+    hours: endHours,
+  });
+
+  const blockedEvents = await getEvents(date, {
+    days: 1,
+  });
+
+  const freeSlots = await getFreeTimeSlots(
+    blockedEvents,
+    lowerBound,
+    upperBound
+  );
 
   return freeSlots;
 }

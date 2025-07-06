@@ -1,20 +1,19 @@
 import * as agent from "../agent/agent.js";
-import * as manager from "./sessionmanager.js";
-import { startOfToday } from "date-fns";
+import { SessionManager } from "./sessionmanager.js";
 import {
   createEvent,
   checkAvailability,
-  getFreeTimeSlots,
-  getEvents,
+  suggestFreeSlotsForDate,
 } from "../calendar/booking.js";
 import {
-  addToDateTime,
+  checkForValidDate,
   formatFreeTimeSlots,
-  UTCtoTimeZone,
+  isInBookingRange,
 } from "../utils/datetime.js";
+import { BOOKING_OPTIONS } from "../index.js";
 
 export async function handleMessage(userId, message) {
-  const session = await manager.getSession(userId);
+  const session = await SessionManager.getSession(userId);
   session.addMessage("user", message);
 
   try {
@@ -24,42 +23,38 @@ export async function handleMessage(userId, message) {
     session.addMessage("assistant", replyMessage);
 
     if (intent == "suggest_times") {
-      const todayDateStr = startOfToday().toISOString();
-      const relevantDate = entities.date ?? todayDateStr;
+      const { date } = session.entities;
+      const relevantDate = date ?? BOOKING_OPTIONS.firstAllowedDate;
+      const isValidDate = isInBookingRange(new Date(relevantDate));
 
-      const lowerBound = addToDateTime(relevantDate, { hours: 9 });
-      const upperBound = addToDateTime(relevantDate, { hours: 22 });
+      if (!isValidDate) {
+        return `Das Buchungsdatum muss ${BOOKING_OPTIONS.bookingDaysPrior} Tage zuvor und zwischen ${BOOKING_OPTIONS.workingHours.start} und ${BOOKING_OPTIONS.workingHours.end} liegen!`;
+      }
 
-      const blockedEvents = await getEvents(relevantDate, {
-        days: 1,
-      });
-
-      const freeSlots = await getFreeTimeSlots(
-        blockedEvents,
-        lowerBound,
-        upperBound
-      );
-
+      const freeSlots = await suggestFreeSlotsForDate(relevantDate);
       return formatFreeTimeSlots(freeSlots, "Europe/Berlin");
     }
 
     if (confirmed) {
-      const available = await checkAvailability(session.entities);
+      const available =
+        checkForValidDate(session.entities) &&
+        (await checkAvailability(session.entities));
 
       if (!available) {
         return "Der Termin ist leider nicht frei! Sage einfach _'Schlage mir Termine für *<Datum>* vor'_.";
       }
 
       await createEvent(session.entities);
-      manager.deleteSession(userId);
+      SessionManager.deleteSession(userId);
       return replyMessage;
     }
 
-    manager.saveSession(userId, session);
+    SessionManager.saveSession(userId, session);
 
     return replyMessage;
   } catch (error) {
     console.error(error);
-    return "Leider ist ein Fehler augetreten, probieren Sie es noch einmal!";
+    SessionManager.deleteSession(userId);
+    return "Leider ist ein Fehler augetreten, starten Sie bitte die Buchung von neu!";
   }
 }
