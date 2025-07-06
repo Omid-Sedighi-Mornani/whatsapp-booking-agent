@@ -5,6 +5,7 @@ export class Session {
     this.entities = {};
     this.messages = [];
     this.userId = userId;
+    this.timeOut = null;
   }
 
   addMessage(role, content) {
@@ -28,9 +29,21 @@ export class SessionManager {
 
   static async saveSession(userId, session) {
     userSessions.set(userId, session);
+    this.setSessionTimeOut(session, 10);
   }
 
   static async deleteSession(userId) {
     userSessions.delete(userId);
+  }
+
+  static async setSessionTimeOut(session, minutes) {
+    if (session.timeOut) {
+      clearTimeout(session.timeOut);
+    }
+
+    session.timeOut = setTimeout(() => {
+      console.log(`Session für ${session.userId} abgelaufen!`);
+      this.deleteSession(session.userId);
+    }, minutes * 60 * 1000);
   }
 }

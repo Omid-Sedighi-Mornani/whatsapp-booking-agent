@@ -9,8 +9,6 @@ import {
   addMonths,
   addYears,
   parseISO,
-  endOfToday,
-  startOfToday,
 } from "date-fns";
 import { DateTime } from "luxon";
 import { BOOKING_OPTIONS } from "../index.js";
@@ -68,7 +66,7 @@ export function toUTC(date) {
   return localDate.toUTC().toISO();
 }
 
-export function UTCtoTimeZone(dateStr, timeZone = "Europe/Berlin") {
+export function UTCtoTimeZone(dateStr, timeZone = BOOKING_OPTIONS.timeZone) {
   return DateTime.fromISO(dateStr, { zone: "utc" }).setZone(timeZone).toISO();
 }
 

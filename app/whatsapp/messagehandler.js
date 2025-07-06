@@ -9,8 +9,20 @@ import {
   checkForValidDate,
   formatFreeTimeSlots,
   isInBookingRange,
+  UTCtoTimeZone,
 } from "../utils/datetime.js";
 import { BOOKING_OPTIONS } from "../index.js";
+import { format } from "date-fns";
+
+const days = [
+  "Sonntag",
+  "Montag",
+  "Dienstag",
+  "Mittwoch",
+  "Donnerstag",
+  "Freitag",
+  "Samstag",
+];
 
 export async function handleMessage(userId, message) {
   const session = await SessionManager.getSession(userId);
@@ -24,11 +36,20 @@ export async function handleMessage(userId, message) {
 
     if (intent == "suggest_times") {
       const { date } = session.entities;
-      const relevantDate = date ?? BOOKING_OPTIONS.firstAllowedDate;
-      const isValidDate = isInBookingRange(new Date(relevantDate));
+      const relevantDate = new Date(date ?? BOOKING_OPTIONS.firstAllowedDate);
+      const isValidDate =
+        isInBookingRange(relevantDate) &&
+        BOOKING_OPTIONS.allowedWeekDays.includes(relevantDate.getDay());
 
       if (!isValidDate) {
-        return `Das Buchungsdatum muss ${BOOKING_OPTIONS.bookingDaysPrior} Tage zuvor und zwischen ${BOOKING_OPTIONS.workingHours.start} und ${BOOKING_OPTIONS.workingHours.end} liegen!`;
+        return `Das Buchungsdatum mindestens am ${format(
+          UTCtoTimeZone(BOOKING_OPTIONS.firstAllowedDate),
+          "dd.MM.yyyy"
+        )} zwischen ${BOOKING_OPTIONS.workingHours.start} und ${
+          BOOKING_OPTIONS.workingHours.end
+        } liegen und an folgenden Tagen erfolgen: ${BOOKING_OPTIONS.allowedWeekDays
+          .map((dayNum) => days[dayNum])
+          .join(", ")}`;
       }
 
       const freeSlots = await suggestFreeSlotsForDate(relevantDate);
@@ -41,7 +62,7 @@ export async function handleMessage(userId, message) {
         (await checkAvailability(session.entities));
 
       if (!available) {
-        return "Der Termin ist leider nicht frei! Sage einfach _'Schlage mir Termine für *<Datum>* vor'_.";
+        return "Der Termin ist leider nicht frei! Sagen Sie einfach _'Schlage mir Termine für *<Datum>* vor'_.";
       }
 
       await createEvent(session.entities);
