@@ -11,6 +11,7 @@ import {
   toUTC,
 } from "../utils/datetime.js";
 import { BOOKING_OPTIONS } from "../index.js";
+import { DateTime } from "luxon";
 
 const CREDENTIALS_PATH = path.join(process.cwd(), process.env.CREDENTIALS_PATH);
 const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH));
@@ -100,11 +101,12 @@ async function getFreeTimeSlots(events, rangeStartStr, rangeEndStr) {
     }))
     .sort((a, b) => a.start - b.start);
 
+  console.log("getFreeTimeSlots:\n", events);
+
   const freeSlots = [];
 
-  const rangeStart = new Date(rangeStartStr) ?? new Date(sorted[0].start);
-  const rangeEnd =
-    new Date(rangeEndStr) ?? new Date(sorted[sorted.length - 1].end);
+  const rangeStart = new Date(rangeStartStr ?? sorted[0].start);
+  const rangeEnd = new Date(rangeEndStr ?? sorted[sorted.length - 1].end);
 
   let lastEnd = rangeStart;
 
@@ -135,15 +137,19 @@ export async function suggestFreeSlotsForDate(
   start_time = BOOKING_OPTIONS.workingHours.start,
   end_time = BOOKING_OPTIONS.workingHours.end
 ) {
-  const startHours = timeStringToDecimal(start_time);
-  const endHours = timeStringToDecimal(end_time);
+  const [startHours, startMinutes] = timeStringToDecimal(start_time);
+  const [endHours, endMinutes] = timeStringToDecimal(end_time);
 
-  const lowerBound = addToDateTime(date, {
-    hours: startHours,
-  });
-  const upperBound = addToDateTime(date, {
-    hours: endHours,
-  });
+  const lowerBound = DateTime.fromISO(date.toISOString(), {
+    zone: BOOKING_OPTIONS.timeZone,
+  })
+    .set({ hour: startHours, minute: startMinutes, second: 0, millisecond: 0 })
+    .toISO();
+  const upperBound = DateTime.fromISO(date.toISOString(), {
+    zone: BOOKING_OPTIONS.timeZone,
+  })
+    .set({ hour: endHours, minute: endMinutes, second: 0, millisecond: 0 })
+    .toISO();
 
   const blockedEvents = await getEvents(date, {
     days: 1,
@@ -154,6 +160,16 @@ export async function suggestFreeSlotsForDate(
     lowerBound,
     upperBound
   );
+
+  console.log("suggestFreeSlotsForDate:\n", freeSlots);
+  console.log("date:", date);
+  console.log(
+    "hours, minutes:",
+    [startHours, startMinutes],
+    [endHours, endMinutes]
+  );
+  console.log("Upper bound: ", upperBound);
+  console.log("Lower bound: ", lowerBound);
 
   return freeSlots;
 }

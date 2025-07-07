@@ -1,15 +1,4 @@
-import {
-  addMinutes,
-  addSeconds,
-  addHours,
-  parse,
-  format,
-  addDays,
-  addWeeks,
-  addMonths,
-  addYears,
-  parseISO,
-} from "date-fns";
+import { addMinutes, addSeconds, addHours, parse, format } from "date-fns";
 import { DateTime } from "luxon";
 import { BOOKING_OPTIONS } from "../index.js";
 
@@ -32,25 +21,28 @@ export function addToDateTime(
     weeks = 0,
     months = 0,
     years = 0,
-  }
+  },
+  timeZone = BOOKING_OPTIONS.timeZone
 ) {
   let dateObj;
 
   if (!(date instanceof Date)) {
-    dateObj = parseISO(date);
+    dateObj = DateTime.fromISO(date, { zone: timeZone });
   } else {
-    dateObj = date;
+    dateObj = DateTime.fromJSDate(date, { zone: timeZone });
   }
 
-  dateObj = addSeconds(dateObj, seconds);
-  dateObj = addMinutes(dateObj, minutes);
-  dateObj = addHours(dateObj, hours);
-  dateObj = addDays(dateObj, days);
-  dateObj = addWeeks(dateObj, weeks);
-  dateObj = addMonths(dateObj, months);
-  dateObj = addYears(dateObj, years);
+  dateObj = dateObj.plus({
+    seconds,
+    minutes,
+    hours,
+    days,
+    weeks,
+    months,
+    years,
+  });
 
-  return dateObj.toISOString();
+  return dateObj.toISO();
 }
 
 export function toUTC(date) {
@@ -82,6 +74,8 @@ export function formatFreeTimeSlots(
     };
   });
 
+  console.log("formatFreeTimeSlots:\n", slots);
+
   if (!slots || slots.length === 0) {
     return "Es wurden keine freien Zeitfenster gefunden.";
   }
@@ -99,7 +93,7 @@ export function formatFreeTimeSlots(
 
 export function timeStringToDecimal(timeStr) {
   const [h, m] = timeStr.split(":").map(Number);
-  return h + m / 60;
+  return [h, m];
 }
 
 export function isInTimeRange(timeStr, startStr, endStr) {

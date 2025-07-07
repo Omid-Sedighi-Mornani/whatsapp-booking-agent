@@ -6,6 +6,7 @@ export class Session {
     this.messages = [];
     this.userId = userId;
     this.timeOut = null;
+    this.confirmed = false;
   }
 
   addMessage(role, content) {
